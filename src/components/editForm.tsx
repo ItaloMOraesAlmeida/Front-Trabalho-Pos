@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { useToast } from "../contexts/ToastContext";
 import type { Product } from "../App";
+import { formatCurrency } from "../utils/formatters";
 
 interface IEditFormProps {
   produto: Product | null;
@@ -16,7 +17,7 @@ export interface IResultCreateProduct {
 
 export const EditForm = ({ produto, onCancel, onReload }: IEditFormProps) => {
   const [name, setName] = useState(produto?.name || "");
-  const [price, setPrice] = useState(produto?.price || "");
+  const [price, setPrice] = useState(produto?.price?.toString() || ""); // Converte para string
   const [description, setDescription] = useState(produto?.description || "");
   const [sku, setSku] = useState(produto?.sku || "");
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -45,7 +46,7 @@ export const EditForm = ({ produto, onCancel, onReload }: IEditFormProps) => {
           id: produto?.id,
           sku,
           name: name,
-          price: price,
+          price: Number(price), // Converte para number no envio
           description: description,
         }),
       });
@@ -81,7 +82,7 @@ export const EditForm = ({ produto, onCancel, onReload }: IEditFormProps) => {
         message="Tem certeza que deseja salvar as alterações do produto?"
         details={[
           `Nome: ${name}`,
-          `Preço: R$ ${Number(price).toFixed(2)}`,
+          `Preço: ${formatCurrency(Number(price || 0))}`,
           `SKU: ${sku || "Não informado"}`,
           `Descrição: ${description || "Não informada"}`,
         ]}
@@ -278,7 +279,7 @@ export const EditForm = ({ produto, onCancel, onReload }: IEditFormProps) => {
                 name="price"
                 value={price}
                 onChange={(event) => {
-                  setPrice(event.target.value);
+                  setPrice(event.target.value); // Mantém como string
                 }}
                 step="0.01"
                 min="0"

@@ -5,6 +5,7 @@ import { ViewProduct } from "./components/viewProduct";
 import { ConfirmationModal } from "./components/ConfirmationModal";
 import { ToastContainer } from "./components/ToastNotification";
 import { ToastProvider, useToast } from "./contexts/ToastContext";
+import { formatCurrency } from "./utils/formatters";
 
 export interface Product {
   id: string;
@@ -274,7 +275,7 @@ const AppContent = () => {
                     marginBottom: "12px",
                   }}
                 >
-                  💰 R$ {product.price.toFixed(2)}
+                  💰 {formatCurrency(product.price)}
                 </div>
 
                 <div
@@ -407,7 +408,7 @@ const AppContent = () => {
             ? [
                 `Nome: ${productToDelete.name}`,
                 `SKU: ${productToDelete.sku || "N/A"}`,
-                `Preço: R$ ${productToDelete.price.toFixed(2)}`,
+                `Preço: ${formatCurrency(productToDelete.price)}`,
                 "⚠️ Esta ação não pode ser desfeita!",
               ]
             : []

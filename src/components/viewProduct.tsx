@@ -1,4 +1,5 @@
 import type { Product } from "../App";
+import { formatCurrency } from "../utils/formatters";
 
 export const ViewProduct = ({
   produto,
@@ -220,7 +221,7 @@ export const ViewProduct = ({
                   border: "1px solid #c3e6cb",
                 }}
               >
-                R$ {produto?.price?.toFixed(2)}
+                {produto?.price ? formatCurrency(produto.price) : "R$ 0,00"}
               </span>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { useToast } from "../contexts/ToastContext";
+import { formatCurrency } from "../utils/formatters";
 
 interface IRegisterFormProps {
   onCancel: () => void;
@@ -15,7 +16,7 @@ export interface IResultCreateProduct {
 export const RegisterForm = ({ onCancel, onReload }: IRegisterFormProps) => {
   const [sku, setSku] = useState("");
   const [name, setName] = useState("");
-  const [price, setPrice] = useState<number>(0);
+  const [price, setPrice] = useState<string>(""); // Mudado de number(0) para string("")
   const [description, setDescription] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +43,7 @@ export const RegisterForm = ({ onCancel, onReload }: IRegisterFormProps) => {
         body: JSON.stringify({
           sku,
           name,
-          price: price,
+          price: Number(price), // Converte para number no envio
           description: description,
         }),
       });
@@ -78,7 +79,7 @@ export const RegisterForm = ({ onCancel, onReload }: IRegisterFormProps) => {
         message="Tem certeza que deseja cadastrar um novo produto?"
         details={[
           `Nome: ${name}`,
-          `Preço: R$ ${Number(price).toFixed(2)}`,
+          `Preço: ${formatCurrency(Number(price || 0))}`,
           `SKU: ${sku || "Não informado"}`,
           `Descrição: ${description || "Não informada"}`,
         ]}
@@ -277,7 +278,7 @@ export const RegisterForm = ({ onCancel, onReload }: IRegisterFormProps) => {
                 name="price"
                 value={price}
                 onChange={(event) => {
-                  setPrice(Number(event.target.value));
+                  setPrice(event.target.value); // Agora mantém como string
                 }}
                 placeholder="0.00"
                 step="0.01"
