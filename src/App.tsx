@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { EditForm } from "./components/editForm";
+import { RegisterForm } from "./components/registerForm";
 
 export interface Product {
   id: string;
@@ -13,6 +14,7 @@ export const App = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
   const [productEdit, setProductEdit] = useState<Product | null>(null);
+  const [showRegisterForm, setShowRegisterForm] = useState(false);
 
   const getProducts = async () => {
     const response = await fetch("http://localhost:8083/product");
@@ -42,13 +44,27 @@ export const App = () => {
     setProductEdit(result);
   };
 
-  console.log("Produto: ", product);
+  const handlerShowRegisterForm = () => {setShowRegisterForm(!showRegisterForm);};
+
+  const handlerDeleteProduct = async (id: string) => {
+    const response = await fetch(`http://localhost:8083/product/delete?id=${id}`, {
+      method: "DELETE",
+    });
+    const result:boolean = await response.json();
+    if(result) {
+      alert("Produto excluído com sucesso!");
+      getProducts();
+    } else {
+      alert("Erro ao excluir o produto.");
+    }
+  };  
 
   return (
     <div>
       <h1>Hello Wolrd</h1>
 
-      <button onClick={getProducts}>Get Products</button>
+      <button onClick={getProducts}>Listar Produtos</button>
+      <button onClick={handlerShowRegisterForm}>Cadastrar Produto</button>
 
       <table
         style={{
@@ -178,7 +194,7 @@ export const App = () => {
                   >
                     Edição
                   </button>
-                  <button>Exclusão</button>
+                  <button onClick={()=>handlerDeleteProduct(produto?.id ?? "")}>Exclusão</button>
                 </div>
               </td>
             </tr>
@@ -215,6 +231,9 @@ export const App = () => {
           onReload={getProducts}
         />
       )}
+
+      {showRegisterForm && <RegisterForm onCancel={()=>setShowRegisterForm(false)} 
+          onReload={getProducts}/>}
     </div>
   );
 };

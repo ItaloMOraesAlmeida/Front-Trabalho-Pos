@@ -16,6 +16,7 @@ export const EditForm = ({ produto, onCancel, onReload }: IEditFormProps) => {
   const [name, setName] = useState(produto?.name || "");
   const [price, setPrice] = useState(produto?.price || "");
   const [description, setDescription] = useState(produto?.description || "");
+  const [sku, setSku] = useState(produto?.sku || "");
 
   const handleSaveProduct = async (
     event?: React.FormEvent<HTMLFormElement>
@@ -28,7 +29,8 @@ export const EditForm = ({ produto, onCancel, onReload }: IEditFormProps) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        sku: produto?.sku,
+        id: produto?.id,
+        sku,
         name: name,
         price: price,
         description: description,
@@ -55,6 +57,18 @@ export const EditForm = ({ produto, onCancel, onReload }: IEditFormProps) => {
         style={{ display: "flex", flexDirection: "column", gap: "10px" }}
         onSubmit={handleSaveProduct}
       >
+        <div>
+          <label htmlFor="sku">SKU: </label>
+          <input
+            type="text"
+            id="sku"
+            name="sku"
+            value={sku}
+            onChange={(event) => {
+              setSku(event.target.value);
+            }}
+          />
+        </div>
         <div>
           <label htmlFor="name">Name: </label>
           <input
