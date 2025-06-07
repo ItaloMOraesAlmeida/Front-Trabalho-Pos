@@ -1,77 +1,475 @@
 import { useState } from "react";
-import type { Product } from "../App";
+import { ConfirmationModal } from "./ConfirmationModal";
+import { useToast } from "../contexts/ToastContext";
 
 interface IRegisterFormProps {
-    onCancel: () => void;
-    onReload: () => void;
+  onCancel: () => void;
+  onReload: () => void;
 }
 
 export interface IResultCreateProduct {
-    success: boolean;
-    message?: string;
+  success: boolean;
+  message?: string;
 }
 
-export const RegisterForm = ({onCancel, onReload}:IRegisterFormProps) => {
-    const [sku, setSku] = useState("");
-    const [name, setName] = useState("");
-    const [price, setPrice] = useState<number>(0);
-    const [description, setDescription] = useState(""); 
+export const RegisterForm = ({ onCancel, onReload }: IRegisterFormProps) => {
+  const [sku, setSku] = useState("");
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState<number>(0);
+  const [description, setDescription] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handlerRegisterProduct = async (event?: React.FormEvent<HTMLFormElement>) => {
-        event?.preventDefault();
-        const response = await fetch("http://localhost:8083/product", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                sku,
-                name,
-                price: price,
-                description: description,
-            }),
-        });
-    const result: IResultCreateProduct = await response.json();
-        if (result.success) {
-            alert("Produto cadastrado com sucesso!");
-            onReload();
-            onCancel();
-        }else {
-            alert(result.message || "Erro ao cadastrar o produto.");
-        }
+  const { showToast } = useToast();
+
+  const handlerRegisterProduct = async (
+    event?: React.FormEvent<HTMLFormElement>
+  ) => {
+    event?.preventDefault();
+    setShowConfirmation(true);
+  };
+
+  const confirmRegister = async () => {
+    setShowConfirmation(false);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:8083/product", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sku,
+          name,
+          price: price,
+          description: description,
+        }),
+      });
+
+      const result: IResultCreateProduct = await response.json();
+
+      if (result.success) {
+        showToast("🎉 Produto cadastrado com sucesso!", "success");
+        onReload();
+
+        // Aguarda um pouco para garantir que o toast seja exibido antes de fechar o modal
+        setTimeout(() => {
+          onCancel();
+        }, 500);
+      } else {
+        showToast(
+          result.message || "❌ Erro ao cadastrar o produto. Tente novamente.",
+          "error"
+        );
+      }
+    } catch (error) {
+      showToast("❌ Erro de conexão. Verifique sua internet.", "error");
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    
-    return (
-        <div>
-            <h1>Cadastrar Produto</h1>
-            <form onSubmit={handlerRegisterProduct}
-            style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div>
-                    <label htmlFor="sku">SKU: </label>
-                    <input type="text" id="sku" name="sku" value={sku} 
-                    onChange={event => setSku(event.target.value)}/>
-                </div>
-                <div>
-                    <label htmlFor="name">Name: </label>
-                    <input type="text" id="name" name="name" value={name}
-                    onChange={(event)=>setName(event.target.value)} />
-                </div>
-                <div>
-                    <label htmlFor="price">Price: </label>
-                    <input type="number" id="price" name="price" value={price}
-                    onChange={(event)=>setPrice(Number(event.target.value))} />
-                </div>
-                <div>
-                    <label htmlFor="description">Description: </label>
-                    <textarea id="description" name="description" value={description}
-                    onChange={event=>setDescription(event.target.value)}></textarea>
-                </div>
-                <button type="submit">Cadastrar</button>
-                <button type="button" onClick={onCancel}>Cancelar</button>
-            </form>
+  return (
+    <>
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        title="Confirmar Cadastro"
+        message="Tem certeza que deseja cadastrar um novo produto?"
+        details={[
+          `Nome: ${name}`,
+          `Preço: R$ ${Number(price).toFixed(2)}`,
+          `SKU: ${sku || "Não informado"}`,
+          `Descrição: ${description || "Não informada"}`,
+        ]}
+        onConfirm={confirmRegister}
+        onCancel={() => setShowConfirmation(false)}
+        confirmText="➕ Cadastrar"
+        cancelText="✖️ Cancelar"
+        type="info"
+      />
 
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 1000,
+          backdropFilter: "blur(5px)",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "#ffffff",
+            borderRadius: "16px",
+            padding: "32px",
+            maxWidth: "600px",
+            width: "90%",
+            maxHeight: "90vh",
+            overflowY: "auto",
+            boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)",
+            border: "1px solid #e9ecef",
+            position: "relative",
+          }}
+        >
+          {/* Header com gradiente */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              margin: "-32px -32px 24px -32px",
+              padding: "24px 32px",
+              borderRadius: "16px 16px 0 0",
+            }}
+          >
+            <h1
+              style={{
+                color: "white",
+                margin: 0,
+                fontSize: "24px",
+                fontWeight: "600",
+                textAlign: "center",
+                letterSpacing: "0.5px",
+              }}
+            >
+              ➕ Cadastrar Produto
+            </h1>
+          </div>
+
+          <form
+            style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+            onSubmit={handlerRegisterProduct}
+          >
+            {/* Campo SKU */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              <label
+                htmlFor="sku"
+                style={{
+                  fontWeight: "600",
+                  color: "#495057",
+                  fontSize: "14px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                🏷️ SKU:
+              </label>
+              <input
+                type="text"
+                id="sku"
+                name="sku"
+                value={sku}
+                onChange={(event) => {
+                  setSku(event.target.value);
+                }}
+                placeholder="Digite o SKU do produto"
+                style={{
+                  padding: "12px 16px",
+                  border: "2px solid #e9ecef",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontFamily: "monospace",
+                  backgroundColor: "#f8f9fa",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#667eea";
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "#e9ecef";
+                  e.currentTarget.style.backgroundColor = "#f8f9fa";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            {/* Campo Nome */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              <label
+                htmlFor="name"
+                style={{
+                  fontWeight: "600",
+                  color: "#495057",
+                  fontSize: "14px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                📝 Nome: <span style={{ color: "#dc3545" }}>*</span>
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={name}
+                onChange={(event) => {
+                  setName(event.target.value);
+                }}
+                placeholder="Digite o nome do produto"
+                required
+                style={{
+                  padding: "12px 16px",
+                  border: "2px solid #e9ecef",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  backgroundColor: "#f8f9fa",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#667eea";
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "#e9ecef";
+                  e.currentTarget.style.backgroundColor = "#f8f9fa";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            {/* Campo Preço */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              <label
+                htmlFor="price"
+                style={{
+                  fontWeight: "600",
+                  color: "#495057",
+                  fontSize: "14px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                💰 Preço: <span style={{ color: "#dc3545" }}>*</span>
+              </label>
+              <input
+                type="number"
+                id="price"
+                name="price"
+                value={price}
+                onChange={(event) => {
+                  setPrice(Number(event.target.value));
+                }}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                required
+                style={{
+                  padding: "12px 16px",
+                  border: "2px solid #e9ecef",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  backgroundColor: "#f8f9fa",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#667eea";
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "#e9ecef";
+                  e.currentTarget.style.backgroundColor = "#f8f9fa";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            {/* Campo Descrição */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              <label
+                htmlFor="description"
+                style={{
+                  fontWeight: "600",
+                  color: "#495057",
+                  fontSize: "14px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                📄 Descrição:
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={description}
+                onChange={(event) => {
+                  setDescription(event.target.value);
+                }}
+                placeholder="Digite uma descrição para o produto"
+                rows={4}
+                style={{
+                  padding: "12px 16px",
+                  border: "2px solid #e9ecef",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  backgroundColor: "#f8f9fa",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                  resize: "vertical",
+                  fontFamily: "inherit",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#667eea";
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "#e9ecef";
+                  e.currentTarget.style.backgroundColor = "#f8f9fa";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            {/* Nota sobre campos obrigatórios */}
+            <div
+              style={{
+                fontSize: "12px",
+                color: "#6c757d",
+                fontStyle: "italic",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              <span style={{ color: "#dc3545" }}>*</span>
+              Campos obrigatórios
+            </div>
+
+            {/* Botões */}
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "center",
+                marginTop: "8px",
+              }}
+            >
+              <button
+                type="submit"
+                disabled={isLoading}
+                style={{
+                  backgroundColor: isLoading ? "#6c757d" : "#28a745",
+                  color: "white",
+                  border: "none",
+                  padding: "12px 24px",
+                  borderRadius: "8px",
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  transition: "all 0.3s ease",
+                  boxShadow: `0 4px 12px ${
+                    isLoading
+                      ? "rgba(108, 117, 125, 0.3)"
+                      : "rgba(40, 167, 69, 0.3)"
+                  }`,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  minWidth: "120px",
+                  opacity: isLoading ? 0.7 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading) {
+                    e.currentTarget.style.backgroundColor = "#218838";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 16px rgba(40, 167, 69, 0.4)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isLoading) {
+                    e.currentTarget.style.backgroundColor = "#28a745";
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(40, 167, 69, 0.3)";
+                  }
+                }}
+              >
+                {isLoading ? "⏳ Cadastrando..." : "💾 Cadastrar"}
+              </button>
+
+              <button
+                type="button"
+                onClick={onCancel}
+                disabled={isLoading}
+                style={{
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  padding: "12px 24px",
+                  borderRadius: "8px",
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 12px rgba(108, 117, 125, 0.3)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  minWidth: "120px",
+                  opacity: isLoading ? 0.7 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading) {
+                    e.currentTarget.style.backgroundColor = "#5a6268";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 6px 16px rgba(108, 117, 125, 0.4)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isLoading) {
+                    e.currentTarget.style.backgroundColor = "#6c757d";
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(108, 117, 125, 0.3)";
+                  }
+                }}
+              >
+                ✖️ Cancelar
+              </button>
+            </div>
+          </form>
         </div>
-    );
-
+      </div>
+    </>
+  );
 };
