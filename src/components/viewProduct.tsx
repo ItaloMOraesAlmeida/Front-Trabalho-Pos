@@ -69,6 +69,43 @@ export const ViewProduct = ({
           gap: "16px",
         }}
       >
+        {/* Seção da imagem do produto */}
+        {produto?.image && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <img
+              src={`http://localhost:8083/product/image/${produto.image}`}
+              alt={produto.name}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "300px",
+                objectFit: "contain",
+                borderRadius: "12px",
+                border: "1px solid #e9ecef",
+                backgroundColor: "#f8f9fa",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.02)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 16px rgba(0, 0, 0, 0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 12px rgba(0, 0, 0, 0.1)";
+              }}
+            />
+          </div>
+        )}
+
         {/* Card de informação */}
         <div
           style={{

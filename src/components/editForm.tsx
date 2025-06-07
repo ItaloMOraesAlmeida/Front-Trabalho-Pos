@@ -20,6 +20,8 @@ export const EditForm = ({ produto, onCancel, onReload }: IEditFormProps) => {
   const [price, setPrice] = useState(produto?.price?.toString() || ""); // Converte para string
   const [description, setDescription] = useState(produto?.description || "");
   const [sku, setSku] = useState(produto?.sku || "");
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,18 +39,22 @@ export const EditForm = ({ produto, onCancel, onReload }: IEditFormProps) => {
     setIsLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append("id", produto?.id || "");
+      formData.append("sku", sku);
+      formData.append("name", name);
+      formData.append("price", price);
+      formData.append("description", description);
+
+      // Adicionar a imagem se uma nova foi selecionada
+      if (image) {
+        formData.append("image", image);
+      }
+
       const response = await fetch("http://localhost:8083/product", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: produto?.id,
-          sku,
-          name: name,
-          price: Number(price), // Converte para number no envio
-          description: description,
-        }),
+        // Não definir Content-Type - o browser faz isso automaticamente para FormData
+        body: formData,
       });
 
       const result: IResultCreateProduct = await response.json();
@@ -358,6 +364,187 @@ export const EditForm = ({ produto, onCancel, onReload }: IEditFormProps) => {
                   e.currentTarget.style.boxShadow = "none";
                 }}
               />
+            </div>
+
+            {/* Campo Imagem */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              <label
+                htmlFor="image"
+                style={{
+                  fontWeight: "600",
+                  color: "#495057",
+                  fontSize: "14px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                🖼️ Imagem:
+              </label>
+
+              {/* Mostrar imagem atual se existir */}
+              {produto?.image && !imagePreview && (
+                <div
+                  style={{
+                    marginBottom: "12px",
+                    padding: "16px",
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "8px",
+                    border: "1px solid #e9ecef",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#6c757d",
+                      marginBottom: "8px",
+                      fontWeight: "600",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    📷 Imagem Atual:
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      border: "1px solid #dee2e6",
+                    }}
+                  >
+                    <img
+                      src={`http://localhost:8083/product/image/${produto.image}`}
+                      alt="Imagem atual do produto"
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: "200px",
+                        objectFit: "contain",
+                        backgroundColor: "#ffffff",
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#6c757d",
+                      marginTop: "8px",
+                      textAlign: "center",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    Selecione uma nova imagem abaixo para substituir
+                  </div>
+                </div>
+              )}
+
+              <input
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
+                onChange={(event) => {
+                  const file = event.target.files?.[0] || null;
+                  setImage(file);
+
+                  // Atualiza o preview da imagem
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      setImagePreview(e.target?.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                  } else {
+                    setImagePreview(null);
+                  }
+                }}
+                style={{
+                  padding: "12px 16px",
+                  border: "2px solid #e9ecef",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  backgroundColor: "#f8f9fa",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#667eea";
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "#e9ecef";
+                  e.currentTarget.style.backgroundColor = "#f8f9fa";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+
+              {/* Preview da nova imagem */}
+              {imagePreview && (
+                <div
+                  style={{
+                    marginTop: "12px",
+                    padding: "16px",
+                    backgroundColor: "#e8f5e8",
+                    borderRadius: "8px",
+                    border: "2px solid #28a745",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#155724",
+                      marginBottom: "8px",
+                      fontWeight: "600",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    🆕 Nova Imagem (Preview):
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      border: "1px solid #c3e6cb",
+                    }}
+                  >
+                    <img
+                      src={imagePreview}
+                      alt="Preview da nova imagem"
+                      style={{
+                        maxWidth: "100%",
+                        height: "auto",
+                        borderRadius: "8px",
+                        backgroundColor: "#ffffff",
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {!produto?.image && !imagePreview && (
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#6c757d",
+                    fontStyle: "italic",
+                    textAlign: "center",
+                    marginTop: "8px",
+                  }}
+                >
+                  📷 Este produto ainda não possui uma imagem
+                </div>
+              )}
             </div>
 
             {/* Botões */}

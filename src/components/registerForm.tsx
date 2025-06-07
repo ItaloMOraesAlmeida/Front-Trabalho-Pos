@@ -18,6 +18,8 @@ export const RegisterForm = ({ onCancel, onReload }: IRegisterFormProps) => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState<string>(""); // Mudado de number(0) para string("")
   const [description, setDescription] = useState("");
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,17 +37,21 @@ export const RegisterForm = ({ onCancel, onReload }: IRegisterFormProps) => {
     setIsLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append("sku", sku);
+      formData.append("name", name);
+      formData.append("price", price);
+      formData.append("description", description);
+
+      // Adicionar a imagem se ela foi selecionada
+      if (image) {
+        formData.append("image", image);
+      }
+
       const response = await fetch("http://localhost:8083/product", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sku,
-          name,
-          price: Number(price), // Converte para number no envio
-          description: description,
-        }),
+        // Não definir Content-Type - o browser faz isso automaticamente para FormData
+        body: formData,
       });
 
       const result: IResultCreateProduct = await response.json();
@@ -53,6 +59,14 @@ export const RegisterForm = ({ onCancel, onReload }: IRegisterFormProps) => {
       if (result.success) {
         showToast("🎉 Produto cadastrado com sucesso!", "success");
         onReload();
+
+        // Limpar os campos e preview
+        setSku("");
+        setName("");
+        setPrice("");
+        setDescription("");
+        setImage(null);
+        setImagePreview(null);
 
         // Aguarda um pouco para garantir que o toast seja exibido antes de fechar o modal
         setTimeout(() => {
@@ -359,6 +373,93 @@ export const RegisterForm = ({ onCancel, onReload }: IRegisterFormProps) => {
                   e.currentTarget.style.boxShadow = "none";
                 }}
               />
+            </div>
+
+            {/* Campo Imagem */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              <label
+                htmlFor="image"
+                style={{
+                  fontWeight: "600",
+                  color: "#495057",
+                  fontSize: "14px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                🖼️ Imagem do Produto:
+              </label>
+              <input
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
+                onChange={(event) => {
+                  const file = event.target.files?.[0] || null;
+                  setImage(file);
+
+                  // Gerar o preview da imagem
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setImagePreview(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                  } else {
+                    setImagePreview(null);
+                  }
+                }}
+                style={{
+                  padding: "12px 16px",
+                  border: "2px solid #e9ecef",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  backgroundColor: "#f8f9fa",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#667eea";
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "#e9ecef";
+                  e.currentTarget.style.backgroundColor = "#f8f9fa";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+
+              {/* Preview da Imagem */}
+              {imagePreview && (
+                <div
+                  style={{
+                    marginTop: "12px",
+                    display: "flex",
+                    justifyContent: "center",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    border: "2px solid #e9ecef",
+                  }}
+                >
+                  <img
+                    src={imagePreview}
+                    alt="Preview da Imagem"
+                    style={{
+                      maxWidth: "100%",
+                      height: "auto",
+                      objectFit: "cover",
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Nota sobre campos obrigatórios */}

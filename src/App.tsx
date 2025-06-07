@@ -13,6 +13,7 @@ export interface Product {
   name: string;
   price: number;
   description: string;
+  image?: string; // Nova propriedade para a imagem
 }
 
 const AppContent = () => {
@@ -240,6 +241,69 @@ const AppContent = () => {
                     "0 4px 16px rgba(0, 0, 0, 0.05)";
                 }}
               >
+                {/* Seção da imagem do produto */}
+                <div style={{ marginBottom: "16px" }}>
+                  {product.image ? (
+                    <img
+                      src={`http://localhost:8083/product/image/${product.image}`}
+                      alt={product.name}
+                      style={{
+                        width: "100%",
+                        height: "200px",
+                        objectFit: "cover",
+                        borderRadius: "8px",
+                        border: "1px solid #e9ecef",
+                        backgroundColor: "#f8f9fa",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.02)";
+                        e.currentTarget.style.boxShadow =
+                          "0 4px 12px rgba(0, 0, 0, 0.15)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                      onClick={() => handleView(product)}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "200px",
+                        backgroundColor: "#f8f9fa",
+                        border: "2px dashed #dee2e6",
+                        borderRadius: "8px",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#6c757d",
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#e9ecef";
+                        e.currentTarget.style.borderColor = "#adb5bd";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "#f8f9fa";
+                        e.currentTarget.style.borderColor = "#dee2e6";
+                      }}
+                      onClick={() => handleView(product)}
+                    >
+                      <div style={{ fontSize: "32px", marginBottom: "8px" }}>
+                        📷
+                      </div>
+                      <div>Sem imagem</div>
+                    </div>
+                  )}
+                </div>
+
                 <div style={{ marginBottom: "16px" }}>
                   <h3
                     style={{
