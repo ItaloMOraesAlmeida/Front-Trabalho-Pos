@@ -65,7 +65,7 @@ const AppContent = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8083/product/${productToDelete.id}`,
+        `http://localhost:8083/product/delete?id=${productToDelete.id}`,
         {
           method: "DELETE",
         }
