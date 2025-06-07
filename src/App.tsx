@@ -1,16 +1,18 @@
 import { useState } from "react";
+import { EditForm } from "./components/editForm";
 
 export interface Product {
   id: string;
   sku?: string;
   name: string;
-  price: number;
+  price: number | null;
   description?: string;
 }
 
 export const App = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
+  const [productEdit, setProductEdit] = useState<Product | null>(null);
 
   const getProducts = async () => {
     const response = await fetch("http://localhost:8083/product");
@@ -28,6 +30,16 @@ export const App = () => {
     const result = await response.json();
 
     setProduct(result);
+  };
+
+  const getProductBySkuEdit = async (sku: string) => {
+    const response = await fetch(
+      `http://localhost:8083/product/bySku?sku=${sku}`
+    );
+
+    const result = await response.json();
+
+    setProductEdit(result);
   };
 
   console.log("Produto: ", product);
@@ -136,7 +148,7 @@ export const App = () => {
                   padding: "12px",
                 }}
               >
-                R$ {produto.price.toFixed(2)}
+                R$ {produto.price?.toFixed(2)}
               </td>
               <td
                 style={{
@@ -161,7 +173,11 @@ export const App = () => {
                   <button onClick={() => getProductBySku(produto?.sku ?? "")}>
                     Visualização
                   </button>
-                  <button>Edição</button>
+                  <button
+                    onClick={() => getProductBySkuEdit(produto?.sku ?? "")}
+                  >
+                    Edição
+                  </button>
                   <button>Exclusão</button>
                 </div>
               </td>
@@ -178,7 +194,7 @@ export const App = () => {
             <p>Sku: {product.sku ?? "Sem SKU"}</p>
             <p>Nome: {product.name}</p>
             <p>Descrição: {product.description ?? "Sem Descrição"}</p>
-            <p>Preço: R$ {product.price.toFixed(2)}</p>
+            <p>Preço: R$ {product.price?.toFixed(2)}</p>
             <button
               onClick={() => {
                 setProduct(null);
@@ -188,6 +204,16 @@ export const App = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {productEdit && (
+        <EditForm
+          produto={productEdit}
+          onCancel={() => {
+            setProductEdit(null);
+          }}
+          onReload={getProducts}
+        />
       )}
     </div>
   );
